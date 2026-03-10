@@ -1,0 +1,61 @@
+# =====================================================
+# ULMS Catalog Service — Application Configuration
+# =====================================================
+server:
+  port: 8082
+
+spring:
+  application:
+    name: catalog-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms_catalog_db
+    username: ${POSTGRES_USER:ulms_admin}
+    password: ${POSTGRES_PASSWORD:ulms_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:ulms_redis_2026}
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USER:ulms}
+    password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+
+rabbitmq:
+  exchange:
+    name: library.events
+
+springdoc:
+  api-docs:
+    path: /api/docs/json
+  swagger-ui:
+    path: /api/docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.ulms.catalog: DEBUG

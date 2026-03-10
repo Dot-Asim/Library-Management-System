@@ -1,0 +1,93 @@
+# =====================================================
+# ULMS API Gateway — Application Configuration
+# =====================================================
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        # ── Auth Service ──
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/v1/auth/**
+
+        # ── Catalog Service ──
+        - id: catalog-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/api/v1/books/**,/api/v1/authors/**,/api/v1/categories/**,/api/v1/copies/**
+
+        # ── Member Service ──
+        - id: member-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/api/v1/members/**,/api/v1/membership-plans/**
+
+        # ── Borrowing Service (Phase 2) ──
+        - id: borrowing-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/api/v1/borrows/**,/api/v1/reservations/**
+
+        # ── Fine Service (Phase 2) ──
+        - id: fine-service
+          uri: http://localhost:8085
+          predicates:
+            - Path=/api/v1/fines/**
+
+        # ── Search Service (Phase 3) ──
+        - id: search-service
+          uri: http://localhost:8087
+          predicates:
+            - Path=/api/v1/search/**
+
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+  # ── Redis (for rate limiting) ──
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:ulms_redis_2026}
+
+# ── JWT Configuration (same secret as auth-service) ──
+jwt:
+  secret: ${JWT_SECRET:VWxNU19TdXBlcl9TZWNyZXRfS2V5XzIwMjZfRW50ZXJwcmlzZV9HcmFkZQ==}
+
+# ── Gateway Configuration ──
+gateway:
+  auth:
+    # Paths that don't require JWT authentication
+    open-paths:
+      - /api/v1/auth/register
+      - /api/v1/auth/login
+      - /api/v1/auth/refresh
+      - /api/v1/books
+      - /api/v1/books/**
+      - /api/v1/authors
+      - /api/v1/authors/**
+      - /api/v1/categories
+      - /api/v1/categories/**
+      - /api/v1/search/**
+      - /api/v1/membership-plans
+      - /actuator/**
+
+# ── Actuator ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+
+# ── Logging ──
+logging:
+  level:
+    com.ulms.gateway: DEBUG
+    org.springframework.cloud.gateway: INFO

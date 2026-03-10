@@ -1,0 +1,92 @@
+# =====================================================
+# ULMS Auth Service — Application Configuration
+# =====================================================
+server:
+  port: 8081
+
+spring:
+  application:
+    name: auth-service
+
+  # ── PostgreSQL ──
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms_auth_db
+    username: ${POSTGRES_USER:ulms_admin}
+    password: ${POSTGRES_PASSWORD:ulms_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      connection-timeout: 30000
+
+  # ── JPA ──
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # ── Liquibase ──
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+
+  # ── Redis ──
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:ulms_redis_2026}
+      timeout: 5000
+
+  # ── RabbitMQ ──
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USER:ulms}
+    password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+
+# ── JWT Configuration ──
+jwt:
+  secret: ${JWT_SECRET:VWxNU19TdXBlcl9TZWNyZXRfS2V5XzIwMjZfRW50ZXJwcmlzZV9HcmFkZQ==}
+  access-token-expiry-ms: ${JWT_EXPIRY_MS:900000}
+  refresh-token-expiry-ms: ${REFRESH_TOKEN_EXPIRY_MS:604800000}
+
+# ── Auth Configuration ──
+auth:
+  max-failed-attempts: 5
+  lockout-duration-minutes: 15
+
+# ── RabbitMQ Exchange ──
+rabbitmq:
+  exchange:
+    name: library.events
+
+# ── OpenAPI (Swagger) ──
+springdoc:
+  api-docs:
+    path: /api/docs/json
+  swagger-ui:
+    path: /api/docs
+
+# ── Actuator ──
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# ── Logging ──
+logging:
+  level:
+    com.ulms.auth: DEBUG
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

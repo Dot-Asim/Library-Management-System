@@ -18,7 +18,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: false
     open-in-view: false
     properties:
@@ -26,17 +26,24 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: false
 
   rabbitmq:
     host: localhost
     port: 5672
     username: ${RABBITMQ_USER:ulms}
     password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+    connection-timeout: 10000
+    requested-heartbeat: 30
+    publisher-confirm-type: correlated
 
-rabbitmq:
-  exchange:
-    name: library.events
+application:
+  rabbitmq:
+    exchanges:
+      member: library.events
+    routing-keys:
+      member-registered: member.registered
+      member-suspended: member.suspended
 
 springdoc:
   api-docs:

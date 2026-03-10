@@ -111,26 +111,13 @@ if not "%WRAPPER_JAR_URL%"=="" (
 )
 :endWrapper
 
-@REM Provide a "standardized" way to retrieve the CLI args that will
-@REM work with both Windows and non-Windows executions.
-set MAVEN_CMD_LINE_ARGS=%*
-
-%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar %*
-if ERRORLEVEL 1 goto error
-goto end
-
-@REM If wrapper jar doesn't exist, fallback to using java directly
-if not exist "%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar" (
-    set WRAPPER_LAUNCHER=org.apache.maven.wrapper.MavenWrapperDownloader
-    echo Maven Wrapper jar not found, downloading...
-)
-
 "%JAVA_HOME%\bin\java.exe" ^
   %MAVEN_OPTS% ^
   %MAVEN_DEBUG_OPTS% ^
   -classpath "%MAVEN_PROJECTBASEDIR%\.mvn\wrapper\maven-wrapper.jar" ^
   "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" ^
-  %WRAPPER_LAUNCHER% %MAVEN_CONFIG% %*
+  org.apache.maven.wrapper.MavenWrapperMain %MAVEN_CONFIG% %*
+
 if ERRORLEVEL 1 goto error
 goto end
 

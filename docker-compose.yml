@@ -21,7 +21,7 @@ services:
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-ulms_admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ulms_secret_2026}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: lms_auth_db
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro

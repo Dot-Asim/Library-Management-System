@@ -33,9 +33,9 @@
     <!-- Properties — Single source of truth for versions             -->
     <!-- ============================================================ -->
     <properties>
-        <java.version>25</java.version>
-        <maven.compiler.source>25</maven.compiler.source>
-        <maven.compiler.target>25</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Spring Cloud -->
@@ -44,12 +44,13 @@
         <!-- JWT -->
         <jjwt.version>0.12.6</jjwt.version>
 
-        <!-- Mapping -->
+        <!-- MapStruct & Lombok -->
+        <lombok.version>1.18.42</lombok.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
 
         <!-- API Docs -->
-        <springdoc.version>2.7.0</springdoc.version>
+        <springdoc.version>2.6.0</springdoc.version>
 
         <!-- Database Migration -->
         <liquibase.version>4.29.2</liquibase.version>
@@ -134,7 +135,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.14.0</version>
                     <configuration>
-                        <release>25</release>
+                        <release>21</release>
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.projectlombok</groupId>

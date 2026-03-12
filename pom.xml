@@ -27,6 +27,8 @@
         <module>auth-service</module>
         <module>catalog-service</module>
         <module>member-service</module>
+        <module>borrowing-service</module>
+        <module>fine-service</module>
     </modules>
 
     <!-- ============================================================ -->

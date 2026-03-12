@@ -1,0 +1,68 @@
+# =====================================================
+# ULMS Borrowing Service — Application Configuration
+# =====================================================
+server:
+  port: 8084
+
+spring:
+  application:
+    name: borrowing-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms_borrow_db
+    username: ${POSTGRES_USER:ulms_admin}
+    password: ${POSTGRES_PASSWORD:ulms_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    enabled: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: ${REDIS_PASSWORD:ulms_redis_2026}
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USER:ulms}
+    password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+    connection-timeout: 10000
+    requested-heartbeat: 30
+    publisher-confirm-type: correlated
+
+application:
+  rabbitmq:
+    exchange: library.events
+    routing-keys:
+      borrow-created: borrow.book.created
+      borrow-returned: borrow.book.returned
+      borrow-overdue: borrow.book.overdue
+
+springdoc:
+  api-docs:
+    path: /api/docs/json
+  swagger-ui:
+    path: /api/docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.ulms.borrowing: DEBUG

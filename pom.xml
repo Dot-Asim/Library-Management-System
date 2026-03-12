@@ -29,6 +29,7 @@
         <module>member-service</module>
         <module>borrowing-service</module>
         <module>fine-service</module>
+        <module>notification-service</module>
     </modules>
 
     <!-- ============================================================ -->

@@ -1,0 +1,75 @@
+# =====================================================
+# ULMS Notification Service — Application Configuration
+# =====================================================
+server:
+  port: 8086
+
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/lms_notification_db
+    username: ${POSTGRES_USER:ulms_admin}
+    password: ${POSTGRES_PASSWORD:ulms_secret_2026}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  liquibase:
+    enabled: false
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USER:ulms}
+    password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+    connection-timeout: 10000
+    requested-heartbeat: 30
+    publisher-confirm-type: correlated
+
+  mail:
+    host: localhost
+    port: 1025
+    username: ""
+    password: ""
+    properties:
+      mail:
+        smtp:
+          auth: false
+          starttls:
+            enable: false
+
+application:
+  rabbitmq:
+    exchange: library.events
+    queues:
+      borrow-created: notification.borrow.created
+      borrow-returned: notification.borrow.returned
+      fine-created: notification.fine.created
+      member-registered: notification.member.registered
+
+springdoc:
+  api-docs:
+    path: /api/docs/json
+  swagger-ui:
+    path: /api/docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.ulms.notification: DEBUG

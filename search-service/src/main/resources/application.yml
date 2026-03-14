@@ -1,0 +1,45 @@
+# =====================================================
+# ULMS Search Service — Application Configuration
+# =====================================================
+server:
+  port: 8087
+
+spring:
+  application:
+    name: search-service
+
+  elasticsearch:
+    uris: http://localhost:9200
+    connection-timeout: 10000
+    socket-timeout: 60000
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: ${RABBITMQ_USER:ulms}
+    password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
+    connection-timeout: 10000
+    requested-heartbeat: 30
+
+application:
+  rabbitmq:
+    exchange: library.events
+    queues:
+      catalog-events: search.catalog.events
+
+springdoc:
+  api-docs:
+    path: /api/docs/json
+  swagger-ui:
+    path: /api/docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+logging:
+  level:
+    com.ulms.search: DEBUG
+    org.springframework.data.elasticsearch: INFO

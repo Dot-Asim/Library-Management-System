@@ -30,6 +30,7 @@
         <module>borrowing-service</module>
         <module>fine-service</module>
         <module>notification-service</module>
+        <module>search-service</module>
     </modules>
 
     <!-- ============================================================ -->

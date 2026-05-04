@@ -12,5 +12,6 @@ public record MemberRegisteredEvent(
     String lastName,
     String email,
     String membershipType,
+    Long membershipPlanId,
     String memberCardBarcode
 ) {}

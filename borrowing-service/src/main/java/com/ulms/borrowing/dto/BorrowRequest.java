@@ -19,4 +19,7 @@ public class BorrowRequest {
 
     @NotNull(message = "Book ID is required")
     private Long bookId;
+
+    private String bookTitle;
+    private String memberEmail;
 }

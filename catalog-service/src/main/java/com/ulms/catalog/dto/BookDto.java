@@ -27,11 +27,19 @@ public class BookDto {
     private String language;
     private String description;
     
-    @NotNull(message = "Author is required")
+    private com.ulms.catalog.model.BookType bookType;
+    private String contentUrl;
+    private String coverImageUrl;
+    private boolean isFree;
+    private String textContent;
+    private Integer availableCopies;
+    private String authorName;
     private Long authorId;
     
     @NotNull(message = "Category is required")
     private Long categoryId;
+    
+    private String categoryName;
     
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

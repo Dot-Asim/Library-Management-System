@@ -58,10 +58,21 @@
         <insert tableName="users">
             <column name="id" valueComputed="gen_random_uuid()"/>
             <column name="email" value="admin@ulms.com"/>
-            <column name="password_hash" value="$2a$12$LJ3m4ys3Gzl5JkF3Zz0e0eHj.vK8Qx5Zv5L8Kx5Zv5L8Kx5Zv5LK"/>
+            <column name="password_hash" value="$2a$12$ONuIL.5u0qYbnZysTJFOyeM5qXX6/AZVBoyKOAA1RASqNN7/gN7G6"/>
             <column name="first_name" value="System"/>
             <column name="last_name" value="Admin"/>
             <column name="role" value="ADMIN"/>
+            <column name="status" value="ACTIVE"/>
+            <column name="failed_login_attempts" valueNumeric="0"/>
+        </insert>
+        <!-- Seed a default librarian user (password: librarian123) -->
+        <insert tableName="users">
+            <column name="id" valueComputed="gen_random_uuid()"/>
+            <column name="email" value="librarian@ulms.com"/>
+            <column name="password_hash" value="$2a$12$CWN25E0SOx4jUGP9JheR/usrkSqB9dFt8tdnMBKK7VVJIudpD2GbG"/>
+            <column name="first_name" value="Library"/>
+            <column name="last_name" value="Manager"/>
+            <column name="role" value="LIBRARIAN"/>
             <column name="status" value="ACTIVE"/>
             <column name="failed_login_attempts" valueNumeric="0"/>
         </insert>

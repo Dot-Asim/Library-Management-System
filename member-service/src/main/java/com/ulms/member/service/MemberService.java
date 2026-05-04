@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class MemberService {
 
     private final MemberRepository memberRepository;
@@ -35,6 +36,13 @@ public class MemberService {
         return memberRepository.findById(id)
                 .map(this::mapToDto)
                 .orElseThrow(() -> new RuntimeException("Member not found: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public MemberDto getMemberByUserId(String userId) {
+        return memberRepository.findByUserId(userId)
+                .map(this::mapToDto)
+                .orElseThrow(() -> new RuntimeException("you cannot borrow"));
     }
 
     @Transactional
@@ -91,6 +99,18 @@ public class MemberService {
         }
 
         return mapToDto(updatedMember);
+    }
+
+    @Transactional
+    public MemberDto updateMemberPlan(Long id, Long planId) {
+        Member member = memberRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Member not found"));
+
+        MembershipPlan plan = planRepository.findById(planId)
+                .orElseThrow(() -> new RuntimeException("Membership Plan not found"));
+
+        member.setMembershipPlan(plan);
+        return mapToDto(memberRepository.save(member));
     }
 
     private MemberDto mapToDto(Member member) {

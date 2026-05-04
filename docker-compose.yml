@@ -61,7 +61,7 @@ services:
     container_name: ulms-rabbitmq
     restart: unless-stopped
     ports:
-      - "5672:5672"    # AMQP
+      - "5673:5672"    # AMQP
       - "15672:15672"  # Management UI
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-ulms}

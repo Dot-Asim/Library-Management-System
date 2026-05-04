@@ -30,12 +30,17 @@ spring:
 
   rabbitmq:
     host: localhost
-    port: 5672
+    port: 5673
     username: ${RABBITMQ_USER:ulms}
     password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
     connection-timeout: 10000
     requested-heartbeat: 30
     publisher-confirm-type: correlated
+    listener:
+      simple:
+        auto-startup: true
+      direct:
+        auto-startup: true
 
   mail:
     host: localhost
@@ -57,6 +62,14 @@ application:
       borrow-returned: notification.borrow.returned
       fine-created: notification.fine.created
       member-registered: notification.member.registered
+    routing-keys:
+      borrow-created: borrow.book.created
+      borrow-returned: borrow.book.returned
+      fine-created: fine.created
+      fine-paid: fine.paid
+      member-registered: member.registered
+      book-added: catalog.book.added
+      book-deleted: catalog.book.deleted
 
 springdoc:
   api-docs:
@@ -65,6 +78,9 @@ springdoc:
     path: /api/docs
 
 management:
+  health:
+    rabbit:
+      enabled: false
   endpoints:
     web:
       exposure:

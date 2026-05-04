@@ -25,12 +25,20 @@ public class FineEventPublisher {
     private String fineCollectedRoutingKey;
 
     public void publishFineCreatedEvent(FineCreatedEvent event) {
-        log.info("Publishing FineCreatedEvent for memberId: {} and fineId: {}", event.memberId(), event.fineId());
-        rabbitTemplate.convertAndSend(exchange, fineCreatedRoutingKey, event);
+        try {
+            log.info("Publishing FineCreatedEvent for memberId: {} and fineId: {}", event.memberId(), event.fineId());
+            rabbitTemplate.convertAndSend(exchange, fineCreatedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping FineCreatedEvent for fineId: {}", event.fineId());
+        }
     }
 
     public void publishFineCollectedEvent(FineCollectedEvent event) {
-        log.info("Publishing FineCollectedEvent for memberId: {} and fineId: {}", event.memberId(), event.fineId());
-        rabbitTemplate.convertAndSend(exchange, fineCollectedRoutingKey, event);
+        try {
+            log.info("Publishing FineCollectedEvent for memberId: {} and fineId: {}", event.memberId(), event.fineId());
+            rabbitTemplate.convertAndSend(exchange, fineCollectedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping FineCollectedEvent for fineId: {}", event.fineId());
+        }
     }
 }

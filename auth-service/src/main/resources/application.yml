@@ -32,7 +32,8 @@ spring:
 
   # ── Liquibase ──
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.xml
 
   # ── Redis ──
   data:
@@ -45,12 +46,17 @@ spring:
   # ── RabbitMQ ──
   rabbitmq:
     host: localhost
-    port: 5672
+    port: 5673
     username: ${RABBITMQ_USER:ulms}
     password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
     connection-timeout: 10000
     requested-heartbeat: 30
     publisher-confirm-type: correlated
+    listener:
+      simple:
+        auto-startup: false
+      direct:
+        auto-startup: false
 
 # ── JWT Configuration ──
 jwt:
@@ -77,6 +83,9 @@ springdoc:
 
 # ── Actuator ──
 management:
+  health:
+    rabbit:
+      enabled: false
   endpoints:
     web:
       exposure:

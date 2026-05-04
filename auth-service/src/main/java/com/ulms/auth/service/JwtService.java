@@ -41,16 +41,22 @@ public class JwtService {
     /**
      * Generate an access JWT token.
      */
-    public String generateAccessToken(String userId, String email, String role) {
+    public String generateAccessToken(String userId, String email, String role, String firstName, String lastName) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenExpiryMs);
+        
+        // Handle null names
+        String fName = firstName != null ? firstName : "";
+        String lName = lastName != null ? lastName : "";
 
         return Jwts.builder()
                 .id(UUID.randomUUID().toString())
                 .subject(userId)
                 .claims(Map.of(
                         "email", email,
-                        "role", role
+                        "role", role,
+                        "firstName", fName,
+                        "lastName", lName
                 ))
                 .issuedAt(now)
                 .expiration(expiry)

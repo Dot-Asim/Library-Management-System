@@ -7,6 +7,7 @@ import com.ulms.catalog.model.Author;
 import com.ulms.catalog.model.Book;
 import com.ulms.catalog.model.BookCopy;
 import com.ulms.catalog.model.BookCopyStatus;
+import com.ulms.catalog.model.BookType;
 import com.ulms.catalog.model.Category;
 import com.ulms.catalog.repository.AuthorRepository;
 import com.ulms.catalog.repository.BookCopyRepository;
@@ -38,7 +39,7 @@ public class BookService {
 
     @Transactional(readOnly = true)
     public BookDto getBookById(Long id) {
-        return bookRepository.findById(id)
+        return bookRepository.findById(java.util.Objects.requireNonNull(id))
                 .map(this::mapToDto)
                 .orElseThrow(() -> new RuntimeException("Book not found: " + id));
     }
@@ -49,10 +50,9 @@ public class BookService {
             throw new RuntimeException("Book ISBN already exists");
         }
 
-        Author author = authorRepository.findById(bookDto.getAuthorId())
-                .orElseThrow(() -> new RuntimeException("Author not found: " + bookDto.getAuthorId()));
+        Author author = resolveAuthor(bookDto);
 
-        Category category = categoryRepository.findById(bookDto.getCategoryId())
+        Category category = categoryRepository.findById(java.util.Objects.requireNonNull(bookDto.getCategoryId()))
                 .orElseThrow(() -> new RuntimeException("Category not found: " + bookDto.getCategoryId()));
 
         Book book = Book.builder()
@@ -64,9 +64,14 @@ public class BookService {
                 .description(bookDto.getDescription())
                 .author(author)
                 .category(category)
+                .bookType(bookDto.getBookType() != null ? bookDto.getBookType() : BookType.PHYSICAL)
+                .contentUrl(bookDto.getContentUrl())
+                .coverImageUrl(bookDto.getCoverImageUrl())
+                .isFree(bookDto.isFree())
+                .textContent(bookDto.getTextContent())
                 .build();
 
-        Book savedBook = bookRepository.save(book);
+        Book savedBook = java.util.Objects.requireNonNull(bookRepository.save(book));
         
         // Publish event
         eventPublisher.publishBookAddedEvent(savedBook);
@@ -83,8 +88,7 @@ public class BookService {
             throw new RuntimeException("Book ISBN already exists");
         }
 
-        Author author = authorRepository.findById(bookDto.getAuthorId())
-                .orElseThrow(() -> new RuntimeException("Author not found: " + bookDto.getAuthorId()));
+        Author author = resolveAuthor(bookDto);
 
         Category category = categoryRepository.findById(bookDto.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found: " + bookDto.getCategoryId()));
@@ -97,6 +101,11 @@ public class BookService {
         book.setDescription(bookDto.getDescription());
         book.setAuthor(author);
         book.setCategory(category);
+        book.setContentUrl(bookDto.getContentUrl());
+        book.setCoverImageUrl(bookDto.getCoverImageUrl());
+        book.setTextContent(bookDto.getTextContent());
+        book.setBookType(bookDto.getBookType());
+        book.setFree(bookDto.isFree());
 
         Book updatedBook = bookRepository.save(book);
 
@@ -114,6 +123,14 @@ public class BookService {
 
         Book book = bookRepository.findById(copyDto.getBookId())
                 .orElseThrow(() -> new RuntimeException("Book not found: " + copyDto.getBookId()));
+
+        // If a copy is added to a DIGITAL book, upgrade the book type to BOTH.
+        if (book.getBookType() == BookType.DIGITAL) {
+            book.setBookType(BookType.BOTH);
+            bookRepository.save(book);
+            // Publish update event so catalog reflects the change
+            eventPublisher.publishBookUpdatedEvent(book);
+        }
 
         BookCopy copy = BookCopy.builder()
                 .book(book)
@@ -143,7 +160,31 @@ public class BookService {
         return mapToCopyDto(copy);
     }
 
+    @Transactional(readOnly = true)
+    public BookCopyDto getAvailableCopy(Long bookId) {
+        return bookCopyRepository.findFirstByBookIdAndStatus(bookId, BookCopyStatus.AVAILABLE)
+                .map(this::mapToCopyDto)
+                .orElseThrow(() -> new RuntimeException("No available copies for book: " + bookId));
+    }
+
+    @Transactional
+    public void deleteBook(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Book not found: " + id));
+        
+        // Delete all copies first
+        bookCopyRepository.deleteAllByBookId(id);
+        
+        // Delete the book
+        bookRepository.delete(book);
+        
+        // Publish event
+        eventPublisher.publishBookDeletedEvent(id);
+    }
+
     private BookDto mapToDto(Book book) {
+        int availableCopies = (int) bookCopyRepository.countByBookIdAndStatus(book.getId(), BookCopyStatus.AVAILABLE);
+
         return BookDto.builder()
                 .id(book.getId())
                 .title(book.getTitle())
@@ -153,7 +194,15 @@ public class BookService {
                 .language(book.getLanguage())
                 .description(book.getDescription())
                 .authorId(book.getAuthor().getId())
+                .authorName(book.getAuthor().getName())
                 .categoryId(book.getCategory().getId())
+                .categoryName(book.getCategory().getName())
+                .bookType(book.getBookType())
+                .contentUrl(book.getContentUrl())
+                .coverImageUrl(book.getCoverImageUrl())
+                .isFree(book.isFree())
+                .textContent(book.getTextContent())
+                .availableCopies(availableCopies)
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
                 .build();
@@ -169,5 +218,23 @@ public class BookService {
                 .createdAt(copy.getCreatedAt())
                 .updatedAt(copy.getUpdatedAt())
                 .build();
+    }
+
+    private Author resolveAuthor(BookDto bookDto) {
+        if (bookDto.getAuthorName() != null && !bookDto.getAuthorName().isBlank()) {
+            return authorRepository.findByName(bookDto.getAuthorName())
+                    .orElseGet(() -> {
+                        Author newAuthor = Author.builder()
+                                .name(bookDto.getAuthorName())
+                                .biography("Author of " + bookDto.getTitle())
+                                .build();
+                        return authorRepository.save(newAuthor);
+                    });
+        } else if (bookDto.getAuthorId() != null) {
+            return authorRepository.findById(bookDto.getAuthorId())
+                    .orElseThrow(() -> new RuntimeException("Author not found: " + bookDto.getAuthorId()));
+        } else {
+            throw new RuntimeException("Either Author Name or Author ID must be provided");
+        }
     }
 }

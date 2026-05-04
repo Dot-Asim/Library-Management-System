@@ -19,6 +19,7 @@ import reactor.core.publisher.Mono;
 import javax.crypto.SecretKey;
 import java.util.Base64;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Global JWT authentication filter for API Gateway.
@@ -53,12 +54,6 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
 
         // Skip auth for open paths
         if (isOpenPath(path)) {
-            return chain.filter(exchange);
-        }
-
-        // Also skip for GET requests to open paths
-        String method = exchange.getRequest().getMethod().name();
-        if ("GET".equals(method) && isOpenPath(path)) {
             return chain.filter(exchange);
         }
 
@@ -101,6 +96,9 @@ public class JwtAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isOpenPath(String path) {
-        return openPaths.stream().anyMatch(pattern -> pathMatcher.match(pattern, path));
+        if (path == null || openPaths == null) return false;
+        return openPaths.stream()
+                .filter(Objects::nonNull)
+                .anyMatch(pattern -> pathMatcher.match(pattern, path));
     }
 }

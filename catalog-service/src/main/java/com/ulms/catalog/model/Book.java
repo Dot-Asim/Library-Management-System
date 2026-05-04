@@ -38,6 +38,23 @@ public class Book {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "book_type", nullable = false)
+    @Builder.Default
+    private BookType bookType = BookType.PHYSICAL;
+
+    @Column(name = "content_url")
+    private String contentUrl;
+
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
+    @Column(name = "is_free")
+    private boolean isFree = false;
+
+    @Column(name = "text_content", columnDefinition = "TEXT")
+    private String textContent;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "author_id", nullable = false)
     private Author author;

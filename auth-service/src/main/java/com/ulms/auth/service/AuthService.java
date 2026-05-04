@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.Objects;
 
 /**
  * Core authentication service — registration, login, token refresh, lockout.
@@ -45,25 +46,48 @@ public class AuthService {
             throw new AuthException("Email already registered", "AUTH-001");
         }
 
+        Role role = Role.STUDENT;
+        UserStatus status = UserStatus.ACTIVE;
+
+        if (request.role() != null) {
+            try {
+                role = Role.valueOf(request.role().toUpperCase());
+                if (role == Role.LIBRARIAN) {
+                    status = UserStatus.PENDING;
+                } else if (role == Role.ADMIN) {
+                    throw new AuthException("Cannot register as admin", "AUTH-008");
+                }
+            } catch (IllegalArgumentException e) {
+                // Keep default STUDENT
+            }
+        }
+
         User user = User.builder()
                 .email(request.email())
                 .passwordHash(passwordEncoder.encode(request.password()))
                 .firstName(request.firstName())
                 .lastName(request.lastName())
-                .role(Role.MEMBER)
-                .status(UserStatus.ACTIVE)
+                .role(role)
+                .status(status)
                 .build();
 
         user = userRepository.save(user);
+        if (user == null) {
+            throw new AuthException("Failed to save user", "AUTH-999");
+        }
         log.info("User registered successfully: {} (id={})", user.getEmail(), user.getId());
 
         // Publish registration event for Member Service
-        eventPublisher.publishMemberRegistered(user);
+        eventPublisher.publishMemberRegistered(user, request.membershipPlanId());
 
         // Generate tokens
         String accessToken = jwtService.generateAccessToken(
-                user.getId().toString(), user.getEmail(), user.getRole().name());
-        String refreshToken = refreshTokenService.createRefreshToken(user.getId().toString());
+                Objects.requireNonNull(user.getId()).toString(), 
+                user.getEmail(), 
+                user.getRole().name(),
+                user.getFirstName(),
+                user.getLastName());
+        refreshTokenService.createRefreshToken(user.getId().toString());
 
         return buildAuthResponse(user, accessToken);
     }
@@ -89,9 +113,12 @@ public class AuthService {
             user.setLockedUntil(null);
         }
 
-        // Check suspended
+        // Check status
         if (user.getStatus() == UserStatus.SUSPENDED) {
             throw new AuthException("Account is suspended. Contact administrator", "AUTH-004");
+        }
+        if (user.getStatus() == UserStatus.PENDING) {
+            throw new AuthException("Account pending approval by admin", "AUTH-009");
         }
 
         // Validate password
@@ -106,8 +133,9 @@ public class AuthService {
         userRepository.save(user);
 
         String accessToken = jwtService.generateAccessToken(
-                user.getId().toString(), user.getEmail(), user.getRole().name());
-        String refreshTokenId = refreshTokenService.createRefreshToken(user.getId().toString());
+                String.valueOf(user.getId()), user.getEmail(), user.getRole().name(),
+                user.getFirstName(), user.getLastName());
+        String refreshTokenId = refreshTokenService.createRefreshToken(String.valueOf(user.getId()));
 
         AuthResponse authResponse = buildAuthResponse(user, accessToken);
         return new LoginResult(authResponse, refreshTokenId, refreshTokenService.getRefreshTokenExpiryMs());
@@ -129,7 +157,8 @@ public class AuthService {
         String newRefreshTokenId = refreshTokenService.createRefreshToken(userId);
 
         String accessToken = jwtService.generateAccessToken(
-                user.getId().toString(), user.getEmail(), user.getRole().name());
+                user.getId().toString(), user.getEmail(), user.getRole().name(),
+                user.getFirstName(), user.getLastName());
 
         AuthResponse authResponse = buildAuthResponse(user, accessToken);
         return new LoginResult(authResponse, newRefreshTokenId, refreshTokenService.getRefreshTokenExpiryMs());
@@ -172,6 +201,73 @@ public class AuthService {
                 user.getLastName(),
                 user.getRole().name()
         );
+    }
+
+    @Transactional
+    public AuthResponse.UserInfo updateProfile(String userId, ProfileUpdateRequest request) {
+        User user = userRepository.findById(java.util.UUID.fromString(userId))
+                .orElseThrow(() -> new AuthException("User not found", "AUTH-006"));
+
+        user.setFirstName(request.firstName());
+        user.setLastName(request.lastName());
+        userRepository.save(user);
+
+        log.info("Profile updated for user: {}", userId);
+        return getCurrentUser(userId);
+    }
+
+    @Transactional
+    public void changePassword(String userId, PasswordChangeRequest request) {
+        User user = userRepository.findById(java.util.UUID.fromString(userId))
+                .orElseThrow(() -> new AuthException("User not found", "AUTH-006"));
+
+        if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
+            throw new AuthException("Current password does not match", "AUTH-010");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        userRepository.save(user);
+        log.info("Password changed for user: {}", userId);
+    }
+
+    // ─── User Management ────────────────────────────────────────────────
+    
+    @Transactional(readOnly = true)
+    public java.util.List<UserListResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(user -> new UserListResponse(
+                        user.getId() != null ? user.getId().toString() : "",
+                        user.getEmail(),
+                        user.getFirstName(),
+                        user.getLastName(),
+                        user.getRole() != null ? user.getRole().name() : "STUDENT",
+                        user.getStatus() != null ? user.getStatus().name() : "ACTIVE"
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public void updateUserStatus(String userId, String status) {
+        User user = userRepository.findById(java.util.UUID.fromString(userId))
+                .orElseThrow(() -> new AuthException("User not found", "AUTH-006"));
+        
+        user.setStatus(UserStatus.valueOf(status.toUpperCase()));
+        userRepository.save(user);
+        log.info("User {} status updated to {}", userId, status);
+    }
+
+    @Transactional
+    public void deleteUser(String userId) {
+        java.util.UUID id = java.util.UUID.fromString(userId);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new AuthException("User not found", "AUTH-006"));
+        
+        if (user.getRole() == Role.ADMIN) {
+            throw new AuthException("Cannot delete admin account", "AUTH-007");
+        }
+        
+        userRepository.delete(user);
+        log.info("User deleted: {}", userId);
     }
 
     // ─── Private Helpers ─────────────────────────────────────────────────

@@ -11,4 +11,10 @@ import java.util.Optional;
 public interface BookCopyRepository extends JpaRepository<BookCopy, Long> {
     Optional<BookCopy> findByBarcode(String barcode);
     List<BookCopy> findByBookId(Long bookId);
+    Optional<BookCopy> findFirstByBookIdAndStatus(Long bookId, com.ulms.catalog.model.BookCopyStatus status);
+    long countByBookIdAndStatus(Long bookId, com.ulms.catalog.model.BookCopyStatus status);
+    
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.transaction.annotation.Transactional
+    void deleteAllByBookId(Long bookId);
 }

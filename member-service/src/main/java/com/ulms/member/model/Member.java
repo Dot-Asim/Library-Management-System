@@ -22,7 +22,7 @@ public class Member {
     private Long id;
 
     @Column(name = "user_id", nullable = false, unique = true)
-    private Long userId;
+    private String userId;
 
     @Column(name = "first_name", nullable = false)
     private String firstName;

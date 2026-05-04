@@ -5,6 +5,8 @@ import { jwtDecode } from 'jwt-decode';
 interface User {
   id: string;
   email: string;
+  firstName: string;
+  lastName: string;
   roles: string[];
 }
 
@@ -30,7 +32,9 @@ export const useAuthStore = create<AuthState>()(
             user: {
               id: decoded.sub,
               email: decoded.email,
-              roles: decoded.roles || [],
+              firstName: decoded.firstName || '',
+              lastName: decoded.lastName || '',
+              roles: decoded.roles || (decoded.role ? [decoded.role] : []),
             },
           });
         } catch (error) {

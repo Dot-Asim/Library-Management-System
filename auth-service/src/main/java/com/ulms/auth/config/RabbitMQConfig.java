@@ -8,6 +8,7 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import java.util.Objects;
 
 /**
  * RabbitMQ configuration — declares the shared topic exchange.
@@ -33,8 +34,8 @@ public class RabbitMQConfig {
 
     @Bean
     public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(jsonMessageConverter());
+        RabbitTemplate template = new RabbitTemplate(Objects.requireNonNull(connectionFactory));
+        template.setMessageConverter(Objects.requireNonNull(jsonMessageConverter()));
         return template;
     }
 }

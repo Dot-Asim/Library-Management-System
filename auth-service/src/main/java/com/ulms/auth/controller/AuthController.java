@@ -36,8 +36,15 @@ public class AuthController {
             @Valid @RequestBody RegisterRequest request,
             HttpServletResponse response) {
 
-        AuthResponse authResponse = authService.register(request);
-        // For registration, we also do an implicit login
+        AuthResponse authRes = authService.register(request);
+        
+        // If librarian, we don't do implicit login because account is PENDING
+        if ("LIBRARIAN".equalsIgnoreCase(request.role())) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.success("Librarian registration successful. Pending admin approval.", authRes));
+        }
+
+        // For student, we do an implicit login
         AuthService.LoginResult loginResult = authService.login(
                 new LoginRequest(request.email(), request.password()));
 
@@ -51,7 +58,7 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "Authenticate and receive JWT + refresh token")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(
+    public ResponseEntity<ApiResponse<AuthResponse>> login  (
             @Valid @RequestBody LoginRequest request,
             HttpServletResponse response) {
 
@@ -154,6 +161,57 @@ public class AuthController {
 
         AuthResponse.UserInfo userInfo = authService.getCurrentUser(userId);
         return ResponseEntity.ok(ApiResponse.success(userInfo));
+    }
+
+    @PatchMapping("/me")
+    @Operation(summary = "Update current user profile")
+    public ResponseEntity<ApiResponse<AuthResponse.UserInfo>> updateProfile(
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @Valid @RequestBody ProfileUpdateRequest request) {
+        
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Not authenticated", "AUTH-005"));
+        }
+
+        return ResponseEntity.ok(ApiResponse.success(authService.updateProfile(userId, request)));
+    }
+
+    @PostMapping("/change-password")
+    @Operation(summary = "Change current user password")
+    public ResponseEntity<ApiResponse<Void>> changePassword(
+            @RequestHeader(value = "X-User-Id", required = false) String userId,
+            @Valid @RequestBody PasswordChangeRequest request) {
+        
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Not authenticated", "AUTH-005"));
+        }
+
+        authService.changePassword(userId, request);
+        return ResponseEntity.ok(ApiResponse.success("Password changed successfully", null));
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Get all users (Admin only)")
+    public ResponseEntity<ApiResponse<java.util.List<UserListResponse>>> getAllUsers() {
+        return ResponseEntity.ok(ApiResponse.success(authService.getAllUsers()));
+    }
+
+    @PatchMapping("/users/{userId}/status")
+    @Operation(summary = "Update user status / Approve librarian (Admin only)")
+    public ResponseEntity<ApiResponse<Void>> updateStatus(
+            @PathVariable String userId,
+            @RequestParam String status) {
+        authService.updateUserStatus(userId, status);
+        return ResponseEntity.ok(ApiResponse.success("User status updated successfully", null));
+    }
+
+    @DeleteMapping("/users/{userId}")
+    @Operation(summary = "Delete user (Admin only)")
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String userId) {
+        authService.deleteUser(userId);
+        return ResponseEntity.ok(ApiResponse.success("User deleted successfully", null));
     }
 
     // ─── Private Helpers ─────────────────────────────────────────────────

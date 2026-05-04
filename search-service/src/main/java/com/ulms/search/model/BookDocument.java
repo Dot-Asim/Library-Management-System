@@ -22,6 +22,15 @@ public class BookDocument {
     @Field(type = FieldType.Text, analyzer = "english")
     private String title;
 
+    @Field(type = FieldType.Text)
+    private String authorName;
+
+    @Field(type = FieldType.Text, analyzer = "english")
+    private String description;
+
+    @Field(type = FieldType.Keyword)
+    private String categoryName;
+
     @Field(type = FieldType.Keyword)
     private String isbn;
 

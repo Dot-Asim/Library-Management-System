@@ -7,6 +7,10 @@ server:
 spring:
   application:
     name: catalog-service
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
 
   datasource:
     url: jdbc:postgresql://localhost:5432/lms_catalog_db
@@ -36,12 +40,17 @@ spring:
 
   rabbitmq:
     host: localhost
-    port: 5672
+    port: 5673
     username: ${RABBITMQ_USER:ulms}
     password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
     connection-timeout: 10000
     requested-heartbeat: 30
     publisher-confirm-type: correlated
+    listener:
+      simple:
+        auto-startup: true
+      direct:
+        auto-startup: true
 
 application:
   rabbitmq:
@@ -50,6 +59,7 @@ application:
     routing-keys:
       book-added: catalog.book.added
       book-updated: catalog.book.updated
+      book-deleted: catalog.book.deleted
       book-copy-status-changed: catalog.book.copy.status-changed
 
 springdoc:
@@ -59,6 +69,9 @@ springdoc:
     path: /api/docs
 
 management:
+  health:
+    rabbit:
+      enabled: false
   endpoints:
     web:
       exposure:

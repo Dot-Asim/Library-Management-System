@@ -36,12 +36,17 @@ spring:
 
   rabbitmq:
     host: localhost
-    port: 5672
+    port: 5673
     username: ${RABBITMQ_USER:ulms}
     password: ${RABBITMQ_PASSWORD:ulms_rabbit_2026}
     connection-timeout: 10000
     requested-heartbeat: 30
     publisher-confirm-type: correlated
+    listener:
+      simple:
+        auto-startup: true
+      direct:
+        auto-startup: true
 
 application:
   rabbitmq:
@@ -58,6 +63,9 @@ springdoc:
     path: /api/docs
 
 management:
+  health:
+    rabbit:
+      enabled: false
   endpoints:
     web:
       exposure:

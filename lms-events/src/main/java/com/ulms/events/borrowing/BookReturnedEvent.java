@@ -11,6 +11,8 @@ public record BookReturnedEvent(
     String memberId,
     String bookCopyId,
     String bookId,
+    String bookTitle,
+    String memberEmail,
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd") LocalDate returnDate,
     int daysOverdue,
     double fineAmount

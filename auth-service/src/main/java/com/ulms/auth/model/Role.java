@@ -1,7 +1,8 @@
 package com.ulms.auth.model;
 
 public enum Role {
-    MEMBER,
+    STUDENT,
+    FACULTY,
     LIBRARIAN,
     ADMIN
 }

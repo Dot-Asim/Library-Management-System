@@ -20,7 +20,7 @@ public class MemberDto {
     private Long id;
     
     @NotNull(message = "User ID is required")
-    private Long userId;
+    private String userId;
     
     @NotBlank(message = "First name is required")
     private String firstName;

@@ -28,6 +28,15 @@ public class MemberController {
         return ResponseEntity.ok(memberService.getMemberById(id));
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getMemberByUserId(@PathVariable String userId) {
+        try {
+            return ResponseEntity.ok(memberService.getMemberByUserId(userId));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        }
+    }
+
     @PostMapping
     public ResponseEntity<MemberDto> createMember(@Valid @RequestBody MemberDto memberDto) {
         return new ResponseEntity<>(memberService.createMember(memberDto), HttpStatus.CREATED);
@@ -39,5 +48,12 @@ public class MemberController {
             @RequestParam MemberStatus status,
             @RequestParam(required = false) String reason) {
         return ResponseEntity.ok(memberService.updateMemberStatus(id, status, reason));
+    }
+
+    @PatchMapping("/{id}/plan")
+    public ResponseEntity<MemberDto> updateMemberPlan(
+            @PathVariable Long id,
+            @RequestParam Long planId) {
+        return ResponseEntity.ok(memberService.updateMemberPlan(id, planId));
     }
 }

@@ -2,6 +2,7 @@ package com.ulms.borrowing.service;
 
 import com.ulms.borrowing.dto.BorrowRequest;
 import com.ulms.borrowing.dto.BorrowResponse;
+import com.ulms.borrowing.dto.RenewRequest;
 import com.ulms.borrowing.dto.ReturnRequest;
 import com.ulms.borrowing.messaging.BorrowEventPublisher;
 import com.ulms.borrowing.model.BorrowRecord;
@@ -17,10 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
+import java.util.List;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@SuppressWarnings("null")
 public class BorrowingService {
 
     private final BorrowRecordRepository borrowRepository;
@@ -37,14 +40,16 @@ public class BorrowingService {
 
         // Limit check
         int currentBorrows = borrowRepository.countByMemberIdAndStatus(request.getMemberId(), BorrowStatus.BORROWED);
-        if (currentBorrows >= 3) { // Hardcoded to BASIC plan for now; in a real scenario we'd query member-service
-            throw new RuntimeException("Borrow limit reached");
+        if (currentBorrows >= 10) { // Increased limit for dev/testing
+            throw new RuntimeException("Borrow limit reached (Max 10 books)");
         }
 
         BorrowRecord record = BorrowRecord.builder()
                 .memberId(request.getMemberId())
                 .bookCopyId(request.getBookCopyId())
                 .bookId(request.getBookId())
+                .bookTitle(request.getBookTitle() != null ? request.getBookTitle() : "Unknown Title")
+                .memberEmail(request.getMemberEmail() != null ? request.getMemberEmail() : "unknown@ulms.local")
                 .borrowDate(LocalDate.now())
                 .dueDate(LocalDate.now().plusDays(14))
                 .status(BorrowStatus.BORROWED)
@@ -59,9 +64,9 @@ public class BorrowingService {
                 String.valueOf(record.getMemberId()),
                 String.valueOf(record.getBookCopyId()),
                 String.valueOf(record.getBookId()),
-                "Unknown Title", // Future enhancement: capture title
+                record.getBookTitle(),
                 record.getDueDate(),
-                "unknown@ulms.com" // Future enhancement: member info sync
+                record.getMemberEmail()
         );
         eventPublisher.publishBookBorrowedEvent(event);
 
@@ -95,6 +100,8 @@ public class BorrowingService {
                 String.valueOf(record.getMemberId()),
                 String.valueOf(record.getBookCopyId()),
                 String.valueOf(record.getBookId()),
+                record.getBookTitle() != null ? record.getBookTitle() : "A book",
+                record.getMemberEmail() != null ? record.getMemberEmail() : "unknown@ulms.local",
                 record.getReturnDate(),
                 daysOverdue,
                 0.0 // Fine service will calculate this eventually
@@ -102,6 +109,42 @@ public class BorrowingService {
         eventPublisher.publishBookReturnedEvent(event);
 
         return mapToResponse(record);
+    }
+
+    @Transactional(readOnly = true)
+    public List<BorrowResponse> getMemberBorrows(Long memberId) {
+        return borrowRepository.findByMemberId(memberId).stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BorrowResponse> getAllBorrows() {
+        return borrowRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    @Transactional
+    public BorrowResponse renewBorrow(Long borrowId, RenewRequest request) {
+        BorrowRecord record = borrowRepository.findById(borrowId)
+                .orElseThrow(() -> new RuntimeException("Borrow record not found"));
+
+        if (!record.getMemberId().equals(request.getMemberId())) {
+            throw new RuntimeException("Borrow record does not belong to this member");
+        }
+
+        if (record.getStatus() == BorrowStatus.RETURNED) {
+            throw new RuntimeException("Cannot renew a returned book");
+        }
+
+        record.setDueDate(record.getDueDate().plusDays(14));
+        if (record.getStatus() == BorrowStatus.OVERDUE) {
+            record.setStatus(BorrowStatus.BORROWED);
+        }
+
+        BorrowRecord updatedRecord = borrowRepository.save(record);
+        return mapToResponse(updatedRecord);
     }
 
     private BorrowResponse mapToResponse(BorrowRecord record) {

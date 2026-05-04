@@ -11,5 +11,6 @@ public interface BorrowRecordRepository extends JpaRepository<BorrowRecord, Long
     List<BorrowRecord> findByMemberId(Long memberId);
     List<BorrowRecord> findByMemberIdAndStatus(Long memberId, BorrowStatus status);
     Optional<BorrowRecord> findByBookCopyIdAndStatus(Long bookCopyId, BorrowStatus status);
+    List<BorrowRecord> findByStatus(BorrowStatus status);
     int countByMemberIdAndStatus(Long memberId, BorrowStatus status);
 }

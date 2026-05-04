@@ -6,5 +6,9 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
 
     <include file="db/changelog/changesets/001-create-users-table.xml"/>
+    <include file="db/changelog/changesets/002-update-passwords.xml"/>
+    <include file="db/changelog/changesets/003-update-member-passwords.xml"/>
+    <include file="db/changelog/changesets/004-add-pending-status.xml"/>
+    <include file="db/changelog/changesets/005-migrate-member-role.xml"/>
 
 </databaseChangeLog>

@@ -40,10 +40,15 @@ public class MemberEventPublisher {
                 member.getLastName(),
                 member.getEmail(),
                 planName,
+                member.getMembershipPlan() != null ? member.getMembershipPlan().getId() : null,
                 "MC-" + member.getId() // Default dummy barcode as member cards are phase 2 or omitted
         );
-        log.info("Publishing MemberRegisteredEvent for member ID: {}", member.getId());
-        rabbitTemplate.convertAndSend(memberExchange, memberRegisteredRoutingKey, event);
+        try {
+            log.info("Publishing MemberRegisteredEvent for member ID: {}", member.getId());
+            rabbitTemplate.convertAndSend(memberExchange, memberRegisteredRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping MemberRegisteredEvent for member ID: {}", member.getId());
+        }
     }
 
     public void publishMemberSuspendedEvent(Member member, String reason) {
@@ -53,7 +58,11 @@ public class MemberEventPublisher {
                 member.getId().toString(),
                 reason
         );
-        log.info("Publishing MemberSuspendedEvent for member ID: {}", member.getId());
-        rabbitTemplate.convertAndSend(memberExchange, memberSuspendedRoutingKey, event);
+        try {
+            log.info("Publishing MemberSuspendedEvent for member ID: {}", member.getId());
+            rabbitTemplate.convertAndSend(memberExchange, memberSuspendedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping MemberSuspendedEvent for member ID: {}", member.getId());
+        }
     }
 }

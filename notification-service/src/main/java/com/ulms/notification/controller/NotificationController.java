@@ -4,10 +4,7 @@ import com.ulms.notification.dto.NotificationResponse;
 import com.ulms.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,5 +18,16 @@ public class NotificationController {
     @GetMapping("/member/{memberId}")
     public ResponseEntity<List<NotificationResponse>> getMemberNotifications(@PathVariable Long memberId) {
         return ResponseEntity.ok(notificationService.getMemberNotifications(memberId));
+    }
+
+    @GetMapping("/all")
+    public ResponseEntity<List<NotificationResponse>> getAllNotifications() {
+        return ResponseEntity.ok(notificationService.getAllNotifications());
+    }
+
+    @PatchMapping("/{id}/read")
+    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.noContent().build();
     }
 }

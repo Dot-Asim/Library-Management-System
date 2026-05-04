@@ -40,13 +40,20 @@ public class CatalogEventPublisher {
                 Instant.now(),
                 book.getId().toString(),
                 book.getTitle(),
+                book.getAuthor() != null ? book.getAuthor().getName() : "Unknown Author",
+                book.getDescription(),
+                book.getCategory() != null ? book.getCategory().getName() : "General",
                 book.getIsbn(),
                 book.getLanguage(),
                 0, // Default pageCount
-                null // Default coverImageUrl
+                book.getCoverImageUrl()
         );
-        log.info("Publishing BookAddedEvent for book ID: {}", book.getId());
-        rabbitTemplate.convertAndSend(catalogExchange, bookAddedRoutingKey, event);
+        try {
+            log.info("Publishing BookAddedEvent for book ID: {}", book.getId());
+            rabbitTemplate.convertAndSend(catalogExchange, bookAddedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping BookAddedEvent for book ID: {}", book.getId());
+        }
     }
 
     public void publishBookUpdatedEvent(Book book) {
@@ -55,10 +62,17 @@ public class CatalogEventPublisher {
                 Instant.now(),
                 book.getId().toString(),
                 book.getTitle(),
+                book.getAuthor() != null ? book.getAuthor().getName() : "Unknown Author",
+                book.getDescription(),
+                book.getCategory() != null ? book.getCategory().getName() : "General",
                 book.getIsbn()
         );
-        log.info("Publishing BookUpdatedEvent for book ID: {}", book.getId());
-        rabbitTemplate.convertAndSend(catalogExchange, bookUpdatedRoutingKey, event);
+        try {
+            log.info("Publishing BookUpdatedEvent for book ID: {}", book.getId());
+            rabbitTemplate.convertAndSend(catalogExchange, bookUpdatedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping BookUpdatedEvent for book ID: {}", book.getId());
+        }
     }
 
     public void publishBookCopyStatusChangedEvent(BookCopy copy, BookCopyStatus previousStatus) {
@@ -70,7 +84,28 @@ public class CatalogEventPublisher {
                 previousStatus != null ? previousStatus.name() : null,
                 copy.getStatus().name()
         );
-        log.info("Publishing BookCopyStatusChangedEvent for copy ID: {}", copy.getId());
-        rabbitTemplate.convertAndSend(catalogExchange, bookCopyStatusChangedRoutingKey, event);
+        try {
+            log.info("Publishing BookCopyStatusChangedEvent for copy ID: {}", copy.getId());
+            rabbitTemplate.convertAndSend(catalogExchange, bookCopyStatusChangedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping BookCopyStatusChangedEvent for copy ID: {}", copy.getId());
+        }
+    }
+
+    @Value("${application.rabbitmq.routing-keys.book-deleted:catalog.book.deleted}")
+    private String bookDeletedRoutingKey;
+
+    public void publishBookDeletedEvent(Long bookId) {
+        log.info("Publishing BookDeletedEvent for book ID: {}", bookId);
+        com.ulms.events.catalog.BookDeletedEvent event = new com.ulms.events.catalog.BookDeletedEvent(
+                UUID.randomUUID().toString(),
+                Instant.now(),
+                bookId.toString()
+        );
+        try {
+            rabbitTemplate.convertAndSend(catalogExchange, bookDeletedRoutingKey, event);
+        } catch (Exception e) {
+            log.warn("RabbitMQ disabled/unavailable. Skipping BookDeletedEvent for book ID: {}", bookId);
+        }
     }
 }

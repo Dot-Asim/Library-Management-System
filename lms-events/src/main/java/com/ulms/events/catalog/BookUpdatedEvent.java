@@ -8,5 +8,8 @@ public record BookUpdatedEvent(
     @JsonFormat(shape = JsonFormat.Shape.STRING) Instant timestamp,
     String bookId,
     String title,
+    String authorName,
+    String description,
+    String categoryName,
     String isbn
 ) {}

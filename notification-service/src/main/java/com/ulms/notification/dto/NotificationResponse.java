@@ -21,5 +21,6 @@ public class NotificationResponse {
     private String message;
     private NotificationType type;
     private NotificationStatus status;
+    private boolean isRead;
     private LocalDateTime sentAt;
 }

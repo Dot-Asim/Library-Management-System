@@ -24,6 +24,9 @@ public class SearchService {
         BookDocument document = BookDocument.builder()
                 .id(event.bookId())
                 .title(event.title())
+                .authorName(event.authorName())
+                .description(event.description())
+                .categoryName(event.categoryName())
                 .isbn(event.isbn())
                 .language(event.language())
                 .pageCount(event.pageCount())
@@ -42,6 +45,9 @@ public class SearchService {
         if (existingDocOpt.isPresent()) {
             BookDocument doc = existingDocOpt.get();
             doc.setTitle(event.title());
+            doc.setAuthorName(event.authorName());
+            doc.setDescription(event.description());
+            doc.setCategoryName(event.categoryName());
             doc.setIsbn(event.isbn());
             bookSearchRepository.save(doc);
             log.debug("Successfully updated book index: {}", doc.getId());
@@ -59,10 +65,10 @@ public class SearchService {
 
     public List<BookDocument> searchBooks(String query) {
         log.info("Searching books with query: {}", query);
-        // Fallback to find all if query is empty
         if (query == null || query.trim().isEmpty()) {
             return (List<BookDocument>) bookSearchRepository.findAll();
         }
-        return bookSearchRepository.findByTitleContainingIgnoreCase(query);
+        // Custom multi-field search with fuzzy matching
+        return bookSearchRepository.findByTitleOrAuthorNameOrDescriptionOrIsbn(query, query, query, query);
     }
 }

@@ -50,6 +50,10 @@ public class NotificationLog {
     @Column(name = "status")
     private NotificationStatus status;
 
+    @Column(name = "is_read")
+    @Builder.Default
+    private boolean isRead = false;
+
     @CreationTimestamp
     @Column(name = "sent_at", updatable = false)
     private LocalDateTime sentAt;

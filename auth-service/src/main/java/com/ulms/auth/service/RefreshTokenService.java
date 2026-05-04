@@ -5,6 +5,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -32,9 +33,9 @@ public class RefreshTokenService {
         String key = buildKey(userId, tokenId);
 
         redisTemplate.opsForValue().set(
-                key,
+                Objects.requireNonNull(key),
                 "valid",
-                Duration.ofMillis(refreshTokenExpiryMs)
+                Objects.requireNonNull(Duration.ofMillis(refreshTokenExpiryMs))
         );
 
         return tokenId;
@@ -45,7 +46,7 @@ public class RefreshTokenService {
      */
     public boolean validateRefreshToken(String userId, String tokenId) {
         String key = buildKey(userId, tokenId);
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(Objects.requireNonNull(key)));
     }
 
     /**
@@ -53,7 +54,7 @@ public class RefreshTokenService {
      */
     public void invalidateRefreshToken(String userId, String tokenId) {
         String key = buildKey(userId, tokenId);
-        redisTemplate.delete(key);
+        redisTemplate.delete(Objects.requireNonNull(key));
     }
 
     /**

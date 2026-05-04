@@ -39,6 +39,12 @@ public class BorrowRecord {
     @Column(name = "book_id", nullable = false)
     private Long bookId;
 
+    @Column(name = "book_title")
+    private String bookTitle;
+
+    @Column(name = "member_email")
+    private String memberEmail;
+
     @Column(name = "borrow_date", nullable = false)
     private LocalDate borrowDate;
 
